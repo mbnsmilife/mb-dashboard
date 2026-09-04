@@ -24,16 +24,16 @@
     --icon-stroke: #F0EDE6;
   }
   html.light{
-    --bg: #EFEDE6;
-    --panel: #F7F5EF;
-    --line: #D8D4C8;
-    --text: #21242B;
-    --text-muted: #6B7280;
-    --text-dim: #9CA3AF;
-    --amber: #B8660F;
-    --amber-dim: rgba(184,102,15,0.12);
+    --bg: #F5F5FC;
+    --panel: #FFFFFF;
+    --line: #E2E1F3;
+    --text: #23222E;
+    --text-muted: #6B6A85;
+    --text-dim: #A6A4C2;
+    --amber: #6C63D6;
+    --amber-dim: rgba(108,99,214,0.10);
     --green: #2F8F5B;
-    --icon-stroke: #21242B;
+    --icon-stroke: #23222E;
   }
   html, body{ transition: background-color .2s ease, color .2s ease; }
   *{box-sizing:border-box; margin:0; padding:0;}
@@ -58,17 +58,22 @@
   /* ---------- HEADER ---------- */
   header{
     display:flex;
-    align-items:baseline;
+    align-items:flex-end;
     justify-content:space-between;
     padding-bottom:20px;
     border-bottom:1px solid var(--line);
     flex-shrink:0;
   }
+  .header-left{
+    display:flex;
+    flex-direction:column;
+  }
   #date{
-    font-size: 26px;
+    font-size: 20px;
     font-weight:500;
-    color: var(--text);
+    color: var(--text-muted);
     text-transform:capitalize;
+    margin-top:6px;
   }
   #clock{
     font-family:'JetBrains Mono', monospace;
@@ -80,6 +85,7 @@
   }
   #clock span{ color: var(--text-muted); font-size:0.5em; }
 
+  .header-right{ display:flex; align-items:center; gap:12px; }
   #theme-toggle{
     background:none;
     border:1px solid var(--line);
@@ -88,18 +94,16 @@
     border-radius:50%;
     display:flex; align-items:center; justify-content:center;
     cursor:pointer;
-    margin-left:20px;
     flex-shrink:0;
   }
   #theme-toggle svg{ width:18px; height:18px; }
   #theme-toggle:active{ background: var(--amber-dim); color: var(--amber); }
-  .header-right{ display:flex; align-items:baseline; }
 
   /* ---------- MAIN GRID ---------- */
   main{
     flex:1;
     display:grid;
-    grid-template-columns: 27% 1fr 27%;
+    grid-template-columns: 30% 1fr;
     min-height:0;
     padding-top: 22px;
   }
@@ -112,6 +116,68 @@
   .col:first-child{ padding-left:0; }
   .col:last-child{ padding-right:0; border-right:none; }
   .col + .col{ border-left:1px solid var(--line); }
+
+  #left-col{ overflow:hidden; }
+  #weather-block{ flex-shrink:0; }
+  #tasks-block{
+    flex:1;
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+    margin-top:24px;
+    padding-top:22px;
+    border-top:1px solid var(--line);
+  }
+  #tasks-block #task-list{ flex:1; }
+
+  /* ---------- WEEKLY CALENDAR GRID ---------- */
+  .cal-wrap{ overflow:auto; flex:1; }
+  .cal-grid{
+    display:grid;
+    gap:1px;
+    background: var(--line);
+    border:1px solid var(--line);
+    border-radius:3px;
+    overflow:hidden;
+  }
+  .cal-cell{
+    background: var(--bg);
+    padding:8px 6px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    min-height:38px;
+  }
+  .cal-corner{ background: var(--bg); }
+  .cal-daylabel{
+    font-size:13px;
+    font-weight:600;
+    color:var(--text-muted);
+    padding:10px 6px;
+  }
+  .cal-daylabel.today{ color:var(--amber); }
+  .cal-time{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    color:var(--text-dim);
+    justify-content:flex-end;
+    padding-right:10px;
+  }
+  .cal-slot{
+    font-size:12.5px;
+    line-height:1.3;
+    color:var(--text);
+    padding:6px 4px;
+  }
+  .cal-slot.today-col{ background: var(--amber-dim); }
+  .cal-slot.past{ opacity:0.42; }
+  .cal-slot.current{
+    background: var(--amber-dim);
+    box-shadow: inset 0 0 0 1.5px var(--amber);
+    color: var(--amber);
+    font-weight:600;
+  }
 
   .panel-header{
     margin-bottom: 18px;
@@ -177,6 +243,20 @@
     cursor:pointer;
   }
   .refresh-btn:active{ background:var(--amber-dim); color:var(--amber); }
+
+  /* ---------- INFO STRIP (ünnepek / tanítási napok) ---------- */
+  #info-strip{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding: 14px 0;
+    border-bottom:1px solid var(--line);
+    font-size:13px;
+    color: var(--text-muted);
+    flex-shrink:0;
+  }
+  #info-strip .sep{ color: var(--text-dim); }
+  #info-strip .highlight{ color: var(--amber); font-weight:600; }
 
   /* ---------- WEATHER ---------- */
   #weather-current{
@@ -312,60 +392,65 @@
 <div id="app">
 
   <header>
-    <div id="date">betöltés…</div>
-    <div class="header-right">
+    <div class="header-left">
       <div id="clock">--<span>:--</span></div>
+      <div id="date">betöltés…</div>
+    </div>
+    <div class="header-right">
+      <button class="refresh-btn" id="refresh-btn">Frissítés</button>
       <button id="theme-toggle" aria-label="Világos/sötét mód váltása"></button>
     </div>
   </header>
 
+  <div id="info-strip">
+    <span id="holiday-info">—</span>
+    <span class="sep">•</span>
+    <span id="schooldays-info">—</span>
+  </div>
+
   <main>
-    <!-- WEATHER -->
-    <section class="col" id="weather-col">
-      <div class="panel-header"><span class="panel-title">Időjárás</span></div>
-      <div id="weather-current">
-        <div id="weather-icon"></div>
-        <div>
-          <div id="weather-temp">--°</div>
-          <div id="weather-desc">Betöltés…</div>
+    <!-- LEFT: WEATHER + TASKS STACKED -->
+    <section class="col" id="left-col">
+      <div id="weather-block">
+        <div class="panel-header"><span class="panel-title">Időjárás</span></div>
+        <div id="weather-current">
+          <div id="weather-icon"></div>
+          <div>
+            <div id="weather-temp">--°</div>
+            <div id="weather-desc">Betöltés…</div>
+          </div>
         </div>
+        <div id="weather-city"></div>
+        <div id="forecast"></div>
+        <div class="error-banner" id="weather-error"></div>
       </div>
-      <div id="weather-city"></div>
-      <div id="forecast"></div>
-      <div class="error-banner" id="weather-error"></div>
+
+      <div id="tasks-block">
+        <div class="panel-header">
+          <span class="panel-title">Teendők</span>
+          <div class="view-toggle" id="tasks-view-toggle">
+            <button type="button" data-view="day" class="active">Nap</button>
+            <button type="button" data-view="week">Hét</button>
+          </div>
+        </div>
+        <div id="task-list"><div class="empty-state">Betöltés…</div></div>
+        <div class="updated" id="tasks-updated"></div>
+        <div class="error-banner" id="tasks-error"></div>
+      </div>
     </section>
 
     <!-- SCHEDULE -->
     <section class="col" id="schedule-col">
       <div class="panel-header">
         <span class="panel-title" id="schedule-title">Mai órarend</span>
-        <div class="panel-controls">
-          <div class="view-toggle" id="schedule-view-toggle">
-            <button type="button" data-view="day" class="active">Nap</button>
-            <button type="button" data-view="week">Hét</button>
-          </div>
-          <button class="refresh-btn" id="refresh-btn">Frissítés</button>
+        <div class="view-toggle" id="schedule-view-toggle">
+          <button type="button" data-view="day" class="active">Nap</button>
+          <button type="button" data-view="week">Hét</button>
         </div>
       </div>
       <div id="schedule-list"><div class="empty-state">Betöltés…</div></div>
       <div class="updated" id="schedule-updated"></div>
       <div class="error-banner" id="schedule-error"></div>
-    </section>
-
-    <!-- TASKS -->
-    <section class="col" id="tasks-col">
-      <div class="panel-header">
-        <span class="panel-title">Teendők</span>
-        <div class="panel-controls">
-          <div class="view-toggle" id="tasks-view-toggle">
-            <button type="button" data-view="day" class="active">Nap</button>
-            <button type="button" data-view="week">Hét</button>
-          </div>
-        </div>
-      </div>
-      <div id="task-list"><div class="empty-state">Betöltés…</div></div>
-      <div class="updated" id="tasks-updated"></div>
-      <div class="error-banner" id="tasks-error"></div>
     </section>
   </main>
 
@@ -388,6 +473,17 @@ const CONFIG = {
   LAT: 47.53333,
   LON: 21.63333,
   CITY_LABEL: "Debrecen",
+  // Az utolsó tanítási nap dátuma (hónap-nap, minden évben ismétlődik)
+  SCHOOL_LAST_DAY: "06-18",
+
+  // Opcionális: egyéb tanítási szünetek (téli, tavaszi szünet stb.), amiket
+  // a "hátralévő tanítási napok" számlálónak figyelmen kívül kell hagynia.
+  // Formátum: {start:"ÉÉÉÉ-HH-NN", end:"ÉÉÉÉ-HH-NN"} — mindkét dátum tanítási
+  // szünetnek számít, a hivatalos tanév rendje alapján töltsd ki.
+  EXTRA_SCHOOL_BREAKS: [
+    // { start: "2026-12-21", end: "2027-01-02" },
+    // { start: "2027-03-27", end: "2027-03-30" }
+  ],
 
   // Automatikus frissítés gyakorisága percben
   REFRESH_MINUTES: 15
@@ -532,8 +628,8 @@ function fetchSheetTab(tabName, keys){
             const cell = r.c && r.c[idx];
             let val = "";
             if(cell){
-              if(typeof cell.v === "string") val = cell.v;
-              else if(cell.f !== undefined && cell.f !== null) val = String(cell.f);
+              if(cell.f !== undefined && cell.f !== null && cell.f !== "") val = String(cell.f);
+              else if(typeof cell.v === "string") val = cell.v;
               else if(cell.v !== null && cell.v !== undefined) val = String(cell.v);
             }
             obj[key] = val.trim();
@@ -564,8 +660,8 @@ function timeToMinutes(t){
 function parseHuDate(str){
   if(!str) return null;
   str = str.trim();
-  let m = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-  if(!m) m = str.match(/^(\d{4})\.(\d{1,2})\.(\d{1,2})\.?$/);
+  let m = str.match(/^(\d{4})\s*-\s*(\d{1,2})\s*-\s*(\d{1,2})$/);
+  if(!m) m = str.match(/^(\d{4})\s*\.\s*(\d{1,2})\s*\.\s*(\d{1,2})\s*\.?$/);
   if(!m) return null;
   const d = new Date(parseInt(m[1],10), parseInt(m[2],10)-1, parseInt(m[3],10));
   d.setHours(0,0,0,0);
@@ -612,6 +708,58 @@ function lessonRowsHTML(dayRows, isToday, nowMin){
   }).join("");
 }
 
+function renderScheduleWeekCalendar(){
+  const now = new Date();
+  const nowMin = now.getHours()*60 + now.getMinutes();
+  const todayIdx = now.getDay();
+  const dayIndices = [1,2,3,4,5]; // Hétfő..Péntek
+  const perDay = dayIndices.map(idx => rowsForDay(HU_DAYS[idx]));
+
+  const currentIdxPerDay = perDay.map((list, colIdx) => {
+    if(dayIndices[colIdx] !== todayIdx) return -1;
+    let ci = -1;
+    list.forEach((r,i) => { if(r._min <= nowMin) ci = i; });
+    return ci;
+  });
+
+  const timeSet = new Set();
+  perDay.forEach(list => list.forEach(r => timeSet.add(r["idő"] || r["ido"] || "")));
+  const times = [...timeSet].filter(Boolean).sort((a,b) => timeToMinutes(a) - timeToMinutes(b));
+
+  const listEl = document.getElementById("schedule-list");
+  if(times.length === 0){
+    listEl.innerHTML = `<div class="empty-state">Nincs órarend rögzítve erre a hétre.</div>`;
+    return;
+  }
+
+  let html = `<div class="cal-wrap"><div class="cal-grid" style="grid-template-columns: 54px repeat(${dayIndices.length}, 1fr);">`;
+  html += `<div class="cal-cell cal-corner"></div>`;
+  dayIndices.forEach(idx => {
+    html += `<div class="cal-cell cal-daylabel ${idx === todayIdx ? "today" : ""}">${HU_DAYS_SHORT[idx]}</div>`;
+  });
+  times.forEach(t => {
+    html += `<div class="cal-cell cal-time">${t}</div>`;
+    perDay.forEach((list, colIdx) => {
+      const isToday = dayIndices[colIdx] === todayIdx;
+      const rowIdx = list.findIndex(r => (r["idő"] || r["ido"]) === t);
+      if(rowIdx === -1){
+        html += `<div class="cal-cell cal-slot ${isToday ? "today-col" : ""}"></div>`;
+      } else {
+        const lesson = list[rowIdx];
+        let statusCls = "";
+        if(isToday){
+          const ci = currentIdxPerDay[colIdx];
+          if(rowIdx < ci) statusCls = "past";
+          else if(rowIdx === ci) statusCls = "current";
+        }
+        html += `<div class="cal-cell cal-slot ${isToday ? "today-col" : ""} ${statusCls}">${lesson["tantárgy"]||lesson["tantargy"]||""}</div>`;
+      }
+    });
+  });
+  html += `</div></div>`;
+  listEl.innerHTML = html;
+}
+
 function renderSchedule(){
   const now = new Date();
   const nowMin = now.getHours()*60 + now.getMinutes();
@@ -627,16 +775,7 @@ function renderSchedule(){
       : `<div class="empty-state">Nincs órarend rögzítve a mai napra.</div>`;
   } else {
     titleEl.textContent = "Heti órarend";
-    const order = [1,2,3,4,5,6,0]; // Hétfő .. Vasárnap
-    listEl.innerHTML = order.map(idx => {
-      const dayName = HU_DAYS[idx];
-      const isToday = dayName === todayName;
-      const dayRows = rowsForDay(dayName);
-      return `<div class="week-day-group ${isToday ? "today" : ""}">
-                <div class="week-day-label">${dayName}</div>
-                ${lessonRowsHTML(dayRows, isToday, nowMin)}
-              </div>`;
-    }).join("");
+    renderScheduleWeekCalendar();
   }
 }
 
@@ -685,15 +824,15 @@ function renderTasks(){
       ? dayItems.map(taskRowHTML).join("")
       : `<div class="empty-state">Nincs teendő mára.</div>`;
   } else {
-    const monday = mondayOfWeek(today);
     let html = "";
     for(let off = 0; off < 7; off++){
-      const d = addDays(monday, off);
+      const d = addDays(today, off);
       const dayItems = items.filter(r => r._date && sameDate(r._date, d));
       if(dayItems.length === 0) continue;
-      const isToday = sameDate(d, today);
+      const isToday = off === 0;
+      const label = isToday ? "Ma" : HU_DAYS[d.getDay()] + ", " + d.toLocaleDateString('hu-HU',{month:'short', day:'numeric'});
       html += `<div class="week-day-group ${isToday ? "today" : ""}">
-                 <div class="week-day-label">${HU_DAYS[d.getDay()]}</div>
+                 <div class="week-day-label">${label}</div>
                  ${dayItems.map(taskRowHTML).join("")}
                </div>`;
     }
@@ -704,7 +843,7 @@ function renderTasks(){
                  ${undated.map(taskRowHTML).join("")}
                </div>`;
     }
-    listEl.innerHTML = html || `<div class="empty-state">Nincs teendő ezen a héten.</div>`;
+    listEl.innerHTML = html || `<div class="empty-state">Nincs teendő a következő 7 napban.</div>`;
   }
 }
 
@@ -721,10 +860,94 @@ async function loadTasks(){
   }
 }
 
+/* ---------- MAGYAR ÜNNEPNAPOK ---------- */
+function easterSunday(year){
+  // Anonymous Gregorian algorithm
+  const a = year % 19, b = Math.floor(year/100), c = year % 100;
+  const d = Math.floor(b/4), e = b % 4, f = Math.floor((b+8)/25);
+  const g = Math.floor((b-f+1)/3), h = (19*a+b-d-g+15) % 30;
+  const i = Math.floor(c/4), k = c % 4;
+  const l = (32+2*e+2*i-h-k) % 7, m = Math.floor((a+11*h+22*l)/451);
+  const month = Math.floor((h+l-7*m+114)/31);
+  const day = ((h+l-7*m+114) % 31) + 1;
+  return new Date(year, month-1, day);
+}
+function huHolidays(year){
+  const easter = easterSunday(year);
+  return [
+    {date:new Date(year,0,1), name:"Újév"},
+    {date:new Date(year,2,15), name:"Nemzeti ünnep"},
+    {date:easter, name:"Húsvétvasárnap"},
+    {date:addDays(easter,1), name:"Húsvéthétfő"},
+    {date:new Date(year,4,1), name:"A munka ünnepe"},
+    {date:addDays(easter,49), name:"Pünkösdvasárnap"},
+    {date:addDays(easter,50), name:"Pünkösdhétfő"},
+    {date:new Date(year,7,20), name:"Állami ünnep"},
+    {date:new Date(year,9,23), name:"Nemzeti ünnep"},
+    {date:new Date(year,10,1), name:"Mindenszentek"},
+    {date:new Date(year,11,25), name:"Karácsony"},
+    {date:new Date(year,11,26), name:"Karácsony másnapja"},
+  ];
+}
+function isHolidayList(){
+  const now = new Date(); now.setHours(0,0,0,0);
+  return [...huHolidays(now.getFullYear()), ...huHolidays(now.getFullYear()+1)];
+}
+
+function renderHolidayInfo(){
+  const now = new Date(); now.setHours(0,0,0,0);
+  const all = isHolidayList().sort((a,b) => a.date - b.date);
+  const todayMatch = all.find(h => sameDate(h.date, now));
+  const el = document.getElementById("holiday-info");
+  if(todayMatch){
+    el.innerHTML = `<span class="highlight">Ma munkaszüneti nap</span> — ${todayMatch.name}`;
+    return;
+  }
+  const next = all.find(h => h.date > now);
+  if(next){
+    const days = Math.round((next.date - now) / 86400000);
+    const label = next.date.toLocaleDateString('hu-HU', {month:'short', day:'numeric'});
+    el.textContent = `Következő ünnep: ${next.name}, ${label} (${days} nap múlva)`;
+  } else {
+    el.textContent = "";
+  }
+}
+
+/* ---------- HÁTRALÉVŐ TANÍTÁSI NAPOK ---------- */
+function schoolYearEndDate(now){
+  const [mm, dd] = CONFIG.SCHOOL_LAST_DAY.split("-").map(Number);
+  let year = now.getFullYear();
+  let candidate = new Date(year, mm-1, dd);
+  if(now > candidate){ year += 1; candidate = new Date(year, mm-1, dd); }
+  return candidate;
+}
+function inExtraBreak(date){
+  return CONFIG.EXTRA_SCHOOL_BREAKS.some(b => {
+    const s = parseHuDate(b.start), e = parseHuDate(b.end);
+    return s && e && date >= s && date <= e;
+  });
+}
+function renderSchoolDaysInfo(){
+  const now = new Date(); now.setHours(0,0,0,0);
+  const end = schoolYearEndDate(now);
+  const holidays = isHolidayList();
+  let count = 0;
+  let d = new Date(now);
+  while(d <= end){
+    const dow = d.getDay();
+    if(dow !== 0 && dow !== 6 && !holidays.some(h => sameDate(h.date, d)) && !inExtraBreak(d)) count++;
+    d = addDays(d, 1);
+  }
+  const el = document.getElementById("schooldays-info");
+  el.innerHTML = `<span class="highlight">${count}</span> hátralévő tanítási nap`;
+}
+
 function refreshAll(){
   loadWeather();
   loadSchedule();
   loadTasks();
+  renderHolidayInfo();
+  renderSchoolDaysInfo();
 }
 
 document.getElementById("refresh-btn").addEventListener("click", refreshAll);
