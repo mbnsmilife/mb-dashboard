@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Otthoni tábla">
+<title>Otthoni tábla</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #10131A;
+    --panel: #161A23;
+    --line: #2A3040;
+    --text: #F0EDE6;
+    --text-muted: #7C8598;
+    --text-dim: #4C5468;
+    --amber: #E8A33D;
+    --amber-dim: rgba(232,163,61,0.12);
+    --green: #6FCF97;
+    --icon-stroke: #F0EDE6;
+  }
+  html.light{
+    --bg: #F5F5FC;
+    --panel: #FFFFFF;
+    --line: #E2E1F3;
+    --text: #23222E;
+    --text-muted: #6B6A85;
+    --text-dim: #A6A4C2;
+    --amber: #6C63D6;
+    --amber-dim: rgba(108,99,214,0.10);
+    --green: #2F8F5B;
+    --icon-stroke: #23222E;
+  }
+  html, body{ transition: background-color .2s ease, color .2s ease; }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{
+    width:100%; height:100%;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Libre Franklin', sans-serif;
+    overflow:hidden;
+    -webkit-user-select:none; user-select:none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+
+  #app{
+    display:flex;
+    flex-direction:column;
+    width:100vw; height:100vh;
+    padding: 28px 34px;
+  }
+
+  /* ---------- HEADER ---------- */
+  header{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    padding-bottom:20px;
+    border-bottom:1px solid var(--line);
+    flex-shrink:0;
+  }
+  .header-left{
+    display:flex;
+    flex-direction:column;
+  }
+  #date{
+    font-size: 20px;
+    font-weight:500;
+    color: var(--text-muted);
+    text-transform:capitalize;
+    margin-top:6px;
+  }
+  #clock{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 64px;
+    font-weight:600;
+    letter-spacing: 1px;
+    color: var(--text);
+    line-height:1;
+  }
+  #clock span{ color: var(--text-muted); font-size:0.5em; }
+
+  .header-right{ display:flex; align-items:center; gap:12px; }
+  #theme-toggle{
+    background:none;
+    border:1px solid var(--line);
+    color: var(--text-muted);
+    width:38px; height:38px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  #theme-toggle svg{ width:18px; height:18px; }
+  #theme-toggle:active{ background: var(--amber-dim); color: var(--amber); }
+
+  /* ---------- MAIN GRID ---------- */
+  main{
+    flex:1;
+    display:grid;
+    grid-template-columns: 30% 1fr;
+    min-height:0;
+    padding-top: 22px;
+  }
+  .col{
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+    padding: 0 26px;
+  }
+  .col:first-child{ padding-left:0; }
+  .col:last-child{ padding-right:0; border-right:none; }
+  .col + .col{ border-left:1px solid var(--line); }
+
+  #left-col{ overflow:hidden; }
+  #weather-block{ flex-shrink:0; }
+  #tasks-block{
+    flex:1;
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+    margin-top:24px;
+    padding-top:22px;
+    border-top:1px solid var(--line);
+  }
+  #tasks-block #task-list{ flex:1; }
+
+  /* ---------- WEEKLY CALENDAR GRID ---------- */
+  .cal-wrap{ overflow:auto; flex:1; }
+  .cal-grid{
+    display:grid;
+    gap:1px;
+    background: var(--line);
+    border:1px solid var(--line);
+    border-radius:3px;
+    overflow:hidden;
+  }
+  .cal-cell{
+    background: var(--bg);
+    padding:8px 6px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    min-height:38px;
+  }
+  .cal-corner{ background: var(--bg); }
+  .cal-daylabel{
+    font-size:13px;
+    font-weight:600;
+    color:var(--text-muted);
+    padding:10px 6px;
+  }
+  .cal-daylabel.today{ color:var(--amber); }
+  .cal-time{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    color:var(--text-dim);
+    justify-content:flex-end;
+    padding-right:10px;
+  }
+  .cal-slot{
+    font-size:12.5px;
+    line-height:1.3;
+    color:var(--text);
+    padding:6px 4px;
+  }
+  .cal-slot.today-col{ background: var(--amber-dim); }
+  .cal-slot.past{ opacity:0.42; }
+  .cal-slot.current{
+    background: var(--amber-dim);
+    box-shadow: inset 0 0 0 1.5px var(--amber);
+    color: var(--amber);
+    font-weight:600;
+  }
+
+  .panel-header{
+    margin-bottom: 18px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .panel-header > .panel-title{
+    font-size:15px;
+    font-weight:600;
+    color: var(--text-muted);
+  }
+  .panel-controls{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+  }
+  .view-toggle{
+    display:flex;
+    gap:4px;
+  }
+  .view-toggle button{
+    background:none;
+    border:1px solid var(--line);
+    color:var(--text-muted);
+    font-family:'Libre Franklin', sans-serif;
+    font-size:11px;
+    padding:4px 10px;
+    border-radius:3px;
+    cursor:pointer;
+  }
+  .view-toggle button.active{
+    background:var(--amber-dim);
+    color:var(--amber);
+    border-color:var(--amber);
+  }
+  .week-day-group{ margin-bottom:8px; }
+  .week-day-label{
+    font-size:13px;
+    font-weight:600;
+    color:var(--text-muted);
+    padding:10px 14px 4px;
+    border-top:1px solid var(--line);
+  }
+  .week-day-group:first-child .week-day-label{ border-top:none; padding-top:0; }
+  .week-day-group.today .week-day-label{ color:var(--amber); }
+  .empty-state.small{ padding:2px 14px 10px; font-size:13px; }
+  .updated{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    color: var(--text-dim);
+    font-weight:400;
+  }
+  .refresh-btn{
+    background:none;
+    border:1px solid var(--line);
+    color:var(--text-muted);
+    font-family:'Libre Franklin', sans-serif;
+    font-size:11px;
+    padding:4px 10px;
+    border-radius:3px;
+    cursor:pointer;
+  }
+  .refresh-btn:active{ background:var(--amber-dim); color:var(--amber); }
+
+  /* ---------- INFO STRIP (ünnepek / tanítási napok) ---------- */
+  #info-strip{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding: 14px 0;
+    border-bottom:1px solid var(--line);
+    font-size:13px;
+    color: var(--text-muted);
+    flex-shrink:0;
+  }
+  #info-strip .sep{ color: var(--text-dim); }
+  #info-strip .highlight{ color: var(--amber); font-weight:600; }
+
+  /* ---------- WEATHER ---------- */
+  #weather-current{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    margin-bottom: 22px;
+  }
+  #weather-current svg{ width:56px; height:56px; flex-shrink:0; }
+  #weather-temp{
+    font-family:'JetBrains Mono', monospace;
+    font-size:52px;
+    font-weight:600;
+    line-height:1;
+  }
+  #weather-desc{
+    color:var(--text-muted);
+    font-size:15px;
+    margin-top:4px;
+  }
+  #weather-city{
+    color:var(--text-dim);
+    font-size:13px;
+    margin-top:2px;
+  }
+  #forecast{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    border-top:1px solid var(--line);
+    padding-top:16px;
+  }
+  .forecast-row{
+    display:flex;
+    align-items:center;
+    padding:9px 0;
+  }
+  .forecast-row .day{
+    width:64px;
+    font-size:14px;
+    color:var(--text-muted);
+    text-transform:capitalize;
+  }
+  .forecast-row svg{ width:26px; height:26px; margin-right:14px; flex-shrink:0; }
+  .forecast-row .temps{
+    font-family:'JetBrains Mono', monospace;
+    font-size:14px;
+    margin-left:auto;
+  }
+  .forecast-row .temps .lo{ color:var(--text-dim); }
+
+  /* ---------- SCHEDULE ---------- */
+  #schedule-list{
+    flex:1;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+  }
+  .lesson-row{
+    display:flex;
+    align-items:center;
+    gap:20px;
+    padding:13px 14px;
+    border-left:3px solid transparent;
+  }
+  .lesson-row .time{
+    font-family:'JetBrains Mono', monospace;
+    font-size:20px;
+    font-weight:500;
+    width:66px;
+    flex-shrink:0;
+    color:var(--text-muted);
+  }
+  .lesson-row .subject{
+    font-size:19px;
+    font-weight:500;
+  }
+  .lesson-row.past{ opacity:0.38; }
+  .lesson-row.past .time{ color:var(--text-dim); }
+  .lesson-row.current{
+    border-left-color: var(--amber);
+    background: var(--amber-dim);
+    border-radius: 0 4px 4px 0;
+  }
+  .lesson-row.current .time{ color:var(--amber); }
+  .empty-state{
+    color:var(--text-muted);
+    font-size:15px;
+    padding: 20px 14px;
+    line-height:1.5;
+  }
+
+  /* ---------- TASKS ---------- */
+  #task-list{
+    flex:1;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+  .task-row{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    padding:11px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .task-row:last-child{ border-bottom:none; }
+  .task-row svg{ width:18px; height:18px; flex-shrink:0; margin-top:2px; }
+  .task-row .task-text{
+    font-size:15px;
+    line-height:1.4;
+  }
+  .task-row .task-due{
+    display:block;
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    color:var(--text-dim);
+    margin-top:3px;
+  }
+  .task-row.done .task-text{ color:var(--text-dim); text-decoration: line-through; }
+
+  ::-webkit-scrollbar{ width:0; height:0; }
+
+  .error-banner{
+    font-size:12px;
+    color:#D97757;
+    padding:8px 0 0 0;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <div class="header-left">
+      <div id="clock">--<span>:--</span></div>
+      <div id="date">betöltés…</div>
+    </div>
+    <div class="header-right">
+      <button class="refresh-btn" id="refresh-btn">Frissítés</button>
+      <button id="theme-toggle" aria-label="Világos/sötét mód váltása"></button>
+    </div>
+  </header>
+
+  <div id="info-strip">
+    <span id="holiday-info">—</span>
+    <span class="sep">•</span>
+    <span id="schooldays-info">—</span>
+  </div>
+
+  <main>
+    <!-- LEFT: WEATHER + TASKS STACKED -->
+    <section class="col" id="left-col">
+      <div id="weather-block">
+        <div class="panel-header"><span class="panel-title">Időjárás</span></div>
+        <div id="weather-current">
+          <div id="weather-icon"></div>
+          <div>
+            <div id="weather-temp">--°</div>
+            <div id="weather-desc">Betöltés…</div>
+          </div>
+        </div>
+        <div id="weather-city"></div>
+        <div id="forecast"></div>
+        <div class="error-banner" id="weather-error"></div>
+      </div>
+
+      <div id="tasks-block">
+        <div class="panel-header">
+          <span class="panel-title">Teendők</span>
+          <div class="view-toggle" id="tasks-view-toggle">
+            <button type="button" data-view="day" class="active">Nap</button>
+            <button type="button" data-view="week">Hét</button>
+          </div>
+        </div>
+        <div id="task-list"><div class="empty-state">Betöltés…</div></div>
+        <div class="updated" id="tasks-updated"></div>
+        <div class="error-banner" id="tasks-error"></div>
+      </div>
+    </section>
+
+    <!-- SCHEDULE -->
+    <section class="col" id="schedule-col">
+      <div class="panel-header">
+        <span class="panel-title" id="schedule-title">Mai órarend</span>
+        <div class="view-toggle" id="schedule-view-toggle">
+          <button type="button" data-view="day" class="active">Nap</button>
+          <button type="button" data-view="week">Hét</button>
+        </div>
+      </div>
+      <div id="schedule-list"><div class="empty-state">Betöltés…</div></div>
+      <div class="updated" id="schedule-updated"></div>
+      <div class="error-banner" id="schedule-error"></div>
+    </section>
+  </main>
+
+</div>
+
+<script>
+/* =====================================================================
+   BEÁLLÍTÁSOK — töltsd ki ezt a részt a saját adataiddal
+   ===================================================================== */
+const CONFIG = {
+  // A Google Sheet ID-je a linkből:
+  // https://docs.google.com/spreadsheets/d/13ZkHEgfFELbyIypIaU8kjbun8ORPtylC5cOzm__4JIg/edit
+  SHEET_ID: "13ZkHEgfFELbyIypIaU8kjbun8ORPtylC5cOzm__4JIg",
+
+  // A két fül (tab) pontos neve a Sheet alján
+  SCHEDULE_TAB: "Órarend",
+  TASKS_TAB: "Teendők",
+
+  // Helyszín a időjáráshoz (alapértelmezett: Budapest)
+  LAT: 47.53333,
+  LON: 21.63333,
+  CITY_LABEL: "Debrecen",
+  // Az utolsó tanítási nap dátuma (hónap-nap, minden évben ismétlődik)
+  SCHOOL_LAST_DAY: "06-18",
+
+  // Opcionális: egyéb tanítási szünetek (téli, tavaszi szünet stb.), amiket
+  // a "hátralévő tanítási napok" számlálónak figyelmen kívül kell hagynia.
+  // Formátum: {start:"ÉÉÉÉ-HH-NN", end:"ÉÉÉÉ-HH-NN"} — mindkét dátum tanítási
+  // szünetnek számít, a hivatalos tanév rendje alapján töltsd ki.
+  EXTRA_SCHOOL_BREAKS: [
+    // { start: "2026-12-21", end: "2027-01-02" },
+    // { start: "2027-03-27", end: "2027-03-30" }
+  ],
+
+  // Automatikus frissítés gyakorisága percben
+  REFRESH_MINUTES: 15
+};
+/* ===================================================================== */
+
+const HU_DAYS = ["Vasárnap","Hétfő","Kedd","Szerda","Csütörtök","Péntek","Szombat"];
+const HU_DAYS_SHORT = ["Vas","Hét","Kedd","Sze","Csüt","Pén","Szo"];
+
+/* ---------- VILÁGOS / SÖTÉT MÓD ---------- */
+const SUN_ICON = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.7" fill="none"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`;
+const MOON_ICON = `<svg viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linejoin="round"/></svg>`;
+
+function applyTheme(mode){
+  document.documentElement.classList.toggle("light", mode === "light");
+  // show the icon for the mode you'd switch TO
+  document.getElementById("theme-toggle").innerHTML = mode === "light" ? MOON_ICON : SUN_ICON;
+  localStorage.setItem("dashboard-theme", mode);
+}
+function currentTheme(){
+  return document.documentElement.classList.contains("light") ? "light" : "dark";
+}
+(function initTheme(){
+  const saved = localStorage.getItem("dashboard-theme");
+  const systemLight = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
+  applyTheme(saved || (systemLight ? "light" : "dark"));
+})();
+document.getElementById("theme-toggle").addEventListener("click", () => {
+  applyTheme(currentTheme() === "light" ? "dark" : "light");
+});
+
+/* ---------- ÓRA / DÁTUM ---------- */
+function tickClock(){
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,"0");
+  const m = String(now.getMinutes()).padStart(2,"0");
+  document.getElementById("clock").innerHTML = `${h}<span>:${m}</span>`;
+  const dateStr = now.toLocaleDateString('hu-HU', { year:'numeric', month:'long', day:'numeric' }) + ", " + HU_DAYS[now.getDay()];
+  document.getElementById("date").textContent = dateStr;
+}
+setInterval(tickClock, 1000);
+tickClock();
+
+/* ---------- IDŐJÁRÁS IKONOK (WMO kód -> SVG) ---------- */
+function weatherIcon(code, size=56){
+  const s = size;
+  const stroke = `stroke="var(--text)" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
+  const sun = `<circle cx="12" cy="12" r="4" ${stroke}/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" ${stroke}/>`;
+  const cloud = `<path d="M6.5 18a4 4 0 1 1 .8-7.93A5 5 0 0 1 17 11a3.5 3.5 0 0 1-.5 7H6.5Z" ${stroke}/>`;
+  const cloudSun = `<circle cx="8" cy="8" r="3" ${stroke}/><path d="M8 2v1.5M8 12.5V14M2 8h1.5M12.5 8H14M3.8 3.8l1 1M12.2 3.8l-1 1" ${stroke}/><path d="M9 20a4 4 0 1 1 .7-7.94A5 5 0 0 1 19.5 13a3.5 3.5 0 0 1-.5 7H9Z" ${stroke}/>`;
+  const rain = `${cloud}<path d="M8 20l-1 2M12 20l-1 2M16 20l-1 2" ${stroke}/>`;
+  const snow = `${cloud}<path d="M8 19.5v3M8 19.8l1.6 1M8 19.8l-1.6 1M12 19.5v3M12 19.8l1.6 1M12 19.8l-1.6 1M16 19.5v3M16 19.8l1.6 1M16 19.8l-1.6 1" ${stroke}/>`;
+  const storm = `${cloud}<path d="M11 19l-2 3.5h2.5L10 26" ${stroke}/>`;
+  const fog = `<path d="M4 10h16M3 14h18M5 18h14" ${stroke}/>`;
+  let inner;
+  if(code===0) inner=sun;
+  else if(code<=2) inner=cloudSun;
+  else if(code<=3) inner=cloud;
+  else if(code===45||code===48) inner=fog;
+  else if((code>=51&&code<=67)||(code>=80&&code<=82)) inner=rain;
+  else if((code>=71&&code<=77)||code===85||code===86) inner=snow;
+  else if(code>=95) inner=storm;
+  else inner=cloud;
+  return `<svg width="${s}" height="${s}" viewBox="0 0 24 24">${inner}</svg>`;
+}
+function weatherDesc(code){
+  if(code===0) return "Derült";
+  if(code<=2) return "Kissé felhős";
+  if(code===3) return "Borult";
+  if(code===45||code===48) return "Köd";
+  if(code>=51&&code<=57) return "Szitálás";
+  if(code>=61&&code<=67) return "Eső";
+  if(code>=71&&code<=77) return "Havazás";
+  if(code>=80&&code<=82) return "Záporeső";
+  if(code===85||code===86) return "Hózápor";
+  if(code>=95) return "Zivatar";
+  return "—";
+}
+
+async function loadWeather(){
+  const errEl = document.getElementById("weather-error");
+  errEl.textContent = "";
+  try{
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.LAT}&longitude=${CONFIG.LON}&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=4`;
+    const res = await fetch(url);
+    if(!res.ok) throw new Error("weather http " + res.status);
+    const data = await res.json();
+
+    document.getElementById("weather-icon").innerHTML = weatherIcon(data.current.weather_code, 56);
+    document.getElementById("weather-temp").textContent = Math.round(data.current.temperature_2m) + "°";
+    document.getElementById("weather-desc").textContent = weatherDesc(data.current.weather_code);
+    document.getElementById("weather-city").textContent = CONFIG.CITY_LABEL;
+
+    const forecastEl = document.getElementById("forecast");
+    forecastEl.innerHTML = "";
+    for(let i=1; i<=3; i++){
+      const d = new Date(data.daily.time[i]);
+      const dayLabel = HU_DAYS_SHORT[d.getDay()];
+      const hi = Math.round(data.daily.temperature_2m_max[i]);
+      const lo = Math.round(data.daily.temperature_2m_min[i]);
+      const row = document.createElement("div");
+      row.className = "forecast-row";
+      row.innerHTML = `<span class="day">${dayLabel}</span>${weatherIcon(data.daily.weather_code[i],26)}<span class="temps">${hi}° <span class="lo">${lo}°</span></span>`;
+      forecastEl.appendChild(row);
+    }
+  }catch(e){
+    errEl.textContent = "Nem sikerült frissíteni az időjárást.";
+    console.error(e);
+  }
+}
+
+/* ---------- GOOGLE SHEETS BETÖLTÉS (JSONP — nem érzékeny a CORS-ra) ----------
+   Megjegyzés: a Google gyakran hibásan ismeri fel, hogy az 1. sor fejléc-e,
+   ha minden oszlop csak szöveget tartalmaz. Ezért NEM a Google által
+   felismert oszlopneveket használjuk, hanem fix pozíció szerint olvassuk
+   be az oszlopokat (A, B, C...) — a "keys" paraméter adja meg, hogy az adott
+   fülön melyik oszlop mit jelent, ebben a sorrendben. */
+function fetchSheetTab(tabName, keys){
+  return new Promise((resolve, reject) => {
+    const cbName = "gvizCB_" + Math.random().toString(36).slice(2);
+    const script = document.createElement("script");
+
+    const timeoutId = setTimeout(() => {
+      cleanup();
+      reject(new Error("sheet timeout"));
+    }, 10000);
+
+    function cleanup(){
+      clearTimeout(timeoutId);
+      delete window[cbName];
+      if(script.parentNode) script.parentNode.removeChild(script);
+    }
+
+    window[cbName] = function(resp){
+      cleanup();
+      try{
+        if(!resp || !resp.table){ resolve([]); return; }
+        const firstKeyLower = keys[0].toLowerCase();
+        const rows = (resp.table.rows || []).map(r => {
+          const obj = {};
+          keys.forEach((key, idx) => {
+            const cell = r.c && r.c[idx];
+            let val = "";
+            if(cell){
+              if(cell.f !== undefined && cell.f !== null && cell.f !== "") val = String(cell.f);
+              else if(typeof cell.v === "string") val = cell.v;
+              else if(cell.v !== null && cell.v !== undefined) val = String(cell.v);
+            }
+            obj[key] = val.trim();
+          });
+          return obj;
+        }).filter(o => {
+          // Ha a Google mégis adatsorként adta vissza a fejlécet (pl. "Nap"), dobjuk el
+          if((o[keys[0]] || "").toLowerCase() === firstKeyLower) return false;
+          return Object.values(o).some(v => v !== "");
+        });
+        resolve(rows);
+      }catch(e){ reject(e); }
+    };
+
+    script.onerror = () => { cleanup(); reject(new Error("sheet script load error")); };
+    script.src = `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq?tqx=out:json;responseHandler:${cbName}&sheet=${encodeURIComponent(tabName)}&headers=1`;
+    document.head.appendChild(script);
+  });
+}
+
+function timeToMinutes(t){
+  const m = t.match(/(\d{1,2}):(\d{2})/);
+  if(!m) return null;
+  return parseInt(m[1],10)*60 + parseInt(m[2],10);
+}
+
+/* Elfogadott dátumformátumok a Feladatok fülön: 2026-09-08  vagy  2026.09.08 (a záró pont opcionális) */
+function parseHuDate(str){
+  if(!str) return null;
+  str = str.trim();
+  let m = str.match(/^(\d{4})\s*-\s*(\d{1,2})\s*-\s*(\d{1,2})$/);
+  if(!m) m = str.match(/^(\d{4})\s*\.\s*(\d{1,2})\s*\.\s*(\d{1,2})\s*\.?$/);
+  if(!m) return null;
+  const d = new Date(parseInt(m[1],10), parseInt(m[2],10)-1, parseInt(m[3],10));
+  d.setHours(0,0,0,0);
+  return d;
+}
+function sameDate(a,b){
+  return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+}
+function mondayOfWeek(d){
+  const day = d.getDay();
+  const diff = (day === 0 ? -6 : 1 - day);
+  const monday = new Date(d);
+  monday.setHours(0,0,0,0);
+  monday.setDate(d.getDate() + diff);
+  return monday;
+}
+function addDays(d, n){ const r = new Date(d); r.setDate(r.getDate()+n); return r; }
+
+let scheduleRows = [];
+let scheduleView = "day"; // "day" | "week"
+
+function rowsForDay(dayName){
+  return scheduleRows
+    .filter(r => (r["nap"]||"").toLowerCase() === dayName.toLowerCase())
+    .map(r => ({...r, _min: timeToMinutes(r["idő"] || r["ido"] || "")}))
+    .filter(r => r._min !== null)
+    .sort((a,b) => a._min - b._min);
+}
+
+function lessonRowsHTML(dayRows, isToday, nowMin){
+  if(dayRows.length === 0) return `<div class="empty-state small">Nincs óra.</div>`;
+  let currentIdx = -1;
+  if(isToday) dayRows.forEach((r,idx) => { if(r._min <= nowMin) currentIdx = idx; });
+  return dayRows.map((r,idx) => {
+    let cls = "";
+    if(isToday){
+      if(idx < currentIdx) cls = "past";
+      else if(idx === currentIdx) cls = "current";
+    }
+    return `<div class="lesson-row ${cls}">
+              <span class="time">${r["idő"]||r["ido"]||""}</span>
+              <span class="subject">${r["tantárgy"]||r["tantargy"]||""}</span>
+            </div>`;
+  }).join("");
+}
+
+function renderScheduleWeekCalendar(){
+  const now = new Date();
+  const nowMin = now.getHours()*60 + now.getMinutes();
+  const todayIdx = now.getDay();
+  const dayIndices = [1,2,3,4,5]; // Hétfő..Péntek
+  const perDay = dayIndices.map(idx => rowsForDay(HU_DAYS[idx]));
+
+  const currentIdxPerDay = perDay.map((list, colIdx) => {
+    if(dayIndices[colIdx] !== todayIdx) return -1;
+    let ci = -1;
+    list.forEach((r,i) => { if(r._min <= nowMin) ci = i; });
+    return ci;
+  });
+
+  const timeSet = new Set();
+  perDay.forEach(list => list.forEach(r => timeSet.add(r["idő"] || r["ido"] || "")));
+  const times = [...timeSet].filter(Boolean).sort((a,b) => timeToMinutes(a) - timeToMinutes(b));
+
+  const listEl = document.getElementById("schedule-list");
+  if(times.length === 0){
+    listEl.innerHTML = `<div class="empty-state">Nincs órarend rögzítve erre a hétre.</div>`;
+    return;
+  }
+
+  let html = `<div class="cal-wrap"><div class="cal-grid" style="grid-template-columns: 54px repeat(${dayIndices.length}, 1fr);">`;
+  html += `<div class="cal-cell cal-corner"></div>`;
+  dayIndices.forEach(idx => {
+    html += `<div class="cal-cell cal-daylabel ${idx === todayIdx ? "today" : ""}">${HU_DAYS_SHORT[idx]}</div>`;
+  });
+  times.forEach(t => {
+    html += `<div class="cal-cell cal-time">${t}</div>`;
+    perDay.forEach((list, colIdx) => {
+      const isToday = dayIndices[colIdx] === todayIdx;
+      const rowIdx = list.findIndex(r => (r["idő"] || r["ido"]) === t);
+      if(rowIdx === -1){
+        html += `<div class="cal-cell cal-slot ${isToday ? "today-col" : ""}"></div>`;
+      } else {
+        const lesson = list[rowIdx];
+        let statusCls = "";
+        if(isToday){
+          const ci = currentIdxPerDay[colIdx];
+          if(rowIdx < ci) statusCls = "past";
+          else if(rowIdx === ci) statusCls = "current";
+        }
+        html += `<div class="cal-cell cal-slot ${isToday ? "today-col" : ""} ${statusCls}">${lesson["tantárgy"]||lesson["tantargy"]||""}</div>`;
+      }
+    });
+  });
+  html += `</div></div>`;
+  listEl.innerHTML = html;
+}
+
+function renderSchedule(){
+  const now = new Date();
+  const nowMin = now.getHours()*60 + now.getMinutes();
+  const todayName = HU_DAYS[now.getDay()];
+  const listEl = document.getElementById("schedule-list");
+  const titleEl = document.getElementById("schedule-title");
+
+  if(scheduleView === "day"){
+    titleEl.textContent = "Mai órarend — " + todayName;
+    const dayRows = rowsForDay(todayName);
+    listEl.innerHTML = dayRows.length
+      ? lessonRowsHTML(dayRows, true, nowMin)
+      : `<div class="empty-state">Nincs órarend rögzítve a mai napra.</div>`;
+  } else {
+    titleEl.textContent = "Heti órarend";
+    renderScheduleWeekCalendar();
+  }
+}
+
+async function loadSchedule(){
+  const errEl = document.getElementById("schedule-error");
+  errEl.textContent = "";
+  try{
+    scheduleRows = await fetchSheetTab(CONFIG.SCHEDULE_TAB, ["nap", "idő", "tantárgy"]);
+    renderSchedule();
+    document.getElementById("schedule-updated").textContent = "Frissítve: " + new Date().toLocaleTimeString('hu-HU',{hour:'2-digit',minute:'2-digit'});
+  }catch(e){
+    errEl.textContent = "Nem sikerült betölteni az órarendet. Ellenőrizd a Sheet ID-t és a megosztást.";
+    console.error(e);
+  }
+}
+
+let taskRows = [];
+let taskView = "day"; // "day" | "week"
+
+function notDone(r){
+  const v = (r["kész"]||r["kesz"]||"").toLowerCase();
+  return v !== "true" && v !== "igen";
+}
+function openTasksList(){
+  return taskRows.filter(notDone).map(r => ({...r, _date: parseHuDate(r["dátum"]||r["datum"]||"")}));
+}
+function taskRowHTML(r){
+  const label = r._date ? r._date.toLocaleDateString('hu-HU',{month:'short', day:'numeric'}) : "";
+  return `<div class="task-row">
+            <svg viewBox="0 0 18 18"><rect x="1" y="1" width="16" height="16" rx="3" stroke="var(--text-muted)" stroke-width="1.5" fill="none"/></svg>
+            <div>
+              <span class="task-text">${r["feladat"]||""}</span>
+              ${label ? `<span class="task-due">${label}</span>` : ""}
+            </div>
+          </div>`;
+}
+
+function renderTasks(){
+  const listEl = document.getElementById("task-list");
+  const today = new Date(); today.setHours(0,0,0,0);
+  const items = openTasksList();
+
+  if(taskView === "day"){
+    const dayItems = items.filter(r => !r._date || sameDate(r._date, today));
+    listEl.innerHTML = dayItems.length
+      ? dayItems.map(taskRowHTML).join("")
+      : `<div class="empty-state">Nincs teendő mára.</div>`;
+  } else {
+    let html = "";
+    for(let off = 0; off < 7; off++){
+      const d = addDays(today, off);
+      const dayItems = items.filter(r => r._date && sameDate(r._date, d));
+      if(dayItems.length === 0) continue;
+      const isToday = off === 0;
+      const label = isToday ? "Ma" : HU_DAYS[d.getDay()] + ", " + d.toLocaleDateString('hu-HU',{month:'short', day:'numeric'});
+      html += `<div class="week-day-group ${isToday ? "today" : ""}">
+                 <div class="week-day-label">${label}</div>
+                 ${dayItems.map(taskRowHTML).join("")}
+               </div>`;
+    }
+    const undated = items.filter(r => !r._date);
+    if(undated.length){
+      html += `<div class="week-day-group">
+                 <div class="week-day-label">Egyéb</div>
+                 ${undated.map(taskRowHTML).join("")}
+               </div>`;
+    }
+    listEl.innerHTML = html || `<div class="empty-state">Nincs teendő a következő 7 napban.</div>`;
+  }
+}
+
+async function loadTasks(){
+  const errEl = document.getElementById("tasks-error");
+  errEl.textContent = "";
+  try{
+    taskRows = await fetchSheetTab(CONFIG.TASKS_TAB, ["feladat", "dátum", "kész"]);
+    renderTasks();
+    document.getElementById("tasks-updated").textContent = "Frissítve: " + new Date().toLocaleTimeString('hu-HU',{hour:'2-digit',minute:'2-digit'});
+  }catch(e){
+    errEl.textContent = "Nem sikerült betölteni a teendőket. Ellenőrizd a Sheet ID-t és a megosztást.";
+    console.error(e);
+  }
+}
+
+/* ---------- MAGYAR ÜNNEPNAPOK ---------- */
+function easterSunday(year){
+  // Anonymous Gregorian algorithm
+  const a = year % 19, b = Math.floor(year/100), c = year % 100;
+  const d = Math.floor(b/4), e = b % 4, f = Math.floor((b+8)/25);
+  const g = Math.floor((b-f+1)/3), h = (19*a+b-d-g+15) % 30;
+  const i = Math.floor(c/4), k = c % 4;
+  const l = (32+2*e+2*i-h-k) % 7, m = Math.floor((a+11*h+22*l)/451);
+  const month = Math.floor((h+l-7*m+114)/31);
+  const day = ((h+l-7*m+114) % 31) + 1;
+  return new Date(year, month-1, day);
+}
+function huHolidays(year){
+  const easter = easterSunday(year);
+  return [
+    {date:new Date(year,0,1), name:"Újév"},
+    {date:new Date(year,2,15), name:"Nemzeti ünnep"},
+    {date:easter, name:"Húsvétvasárnap"},
+    {date:addDays(easter,1), name:"Húsvéthétfő"},
+    {date:new Date(year,4,1), name:"A munka ünnepe"},
+    {date:addDays(easter,49), name:"Pünkösdvasárnap"},
+    {date:addDays(easter,50), name:"Pünkösdhétfő"},
+    {date:new Date(year,7,20), name:"Állami ünnep"},
+    {date:new Date(year,9,23), name:"Nemzeti ünnep"},
+    {date:new Date(year,10,1), name:"Mindenszentek"},
+    {date:new Date(year,11,25), name:"Karácsony"},
+    {date:new Date(year,11,26), name:"Karácsony másnapja"},
+  ];
+}
+function isHolidayList(){
+  const now = new Date(); now.setHours(0,0,0,0);
+  return [...huHolidays(now.getFullYear()), ...huHolidays(now.getFullYear()+1)];
+}
+
+function renderHolidayInfo(){
+  const now = new Date(); now.setHours(0,0,0,0);
+  const all = isHolidayList().sort((a,b) => a.date - b.date);
+  const todayMatch = all.find(h => sameDate(h.date, now));
+  const el = document.getElementById("holiday-info");
+  if(todayMatch){
+    el.innerHTML = `<span class="highlight">Ma munkaszüneti nap</span> — ${todayMatch.name}`;
+    return;
+  }
+  const next = all.find(h => h.date > now);
+  if(next){
+    const days = Math.round((next.date - now) / 86400000);
+    const label = next.date.toLocaleDateString('hu-HU', {month:'short', day:'numeric'});
+    el.textContent = `Következő ünnep: ${next.name}, ${label} (${days} nap múlva)`;
+  } else {
+    el.textContent = "";
+  }
+}
+
+/* ---------- HÁTRALÉVŐ TANÍTÁSI NAPOK ---------- */
+function schoolYearEndDate(now){
+  const [mm, dd] = CONFIG.SCHOOL_LAST_DAY.split("-").map(Number);
+  let year = now.getFullYear();
+  let candidate = new Date(year, mm-1, dd);
+  if(now > candidate){ year += 1; candidate = new Date(year, mm-1, dd); }
+  return candidate;
+}
+function inExtraBreak(date){
+  return CONFIG.EXTRA_SCHOOL_BREAKS.some(b => {
+    const s = parseHuDate(b.start), e = parseHuDate(b.end);
+    return s && e && date >= s && date <= e;
+  });
+}
+function renderSchoolDaysInfo(){
+  const now = new Date(); now.setHours(0,0,0,0);
+  const end = schoolYearEndDate(now);
+  const holidays = isHolidayList();
+  let count = 0;
+  let d = new Date(now);
+  while(d <= end){
+    const dow = d.getDay();
+    if(dow !== 0 && dow !== 6 && !holidays.some(h => sameDate(h.date, d)) && !inExtraBreak(d)) count++;
+    d = addDays(d, 1);
+  }
+  const el = document.getElementById("schooldays-info");
+  el.innerHTML = `<span class="highlight">${count}</span> hátralévő tanítási nap`;
+}
+
+function refreshAll(){
+  loadWeather();
+  loadSchedule();
+  loadTasks();
+  renderHolidayInfo();
+  renderSchoolDaysInfo();
+}
+
+document.getElementById("refresh-btn").addEventListener("click", refreshAll);
+
+document.getElementById("schedule-view-toggle").addEventListener("click", (e) => {
+  const btn = e.target.closest("button");
+  if(!btn) return;
+  scheduleView = btn.dataset.view;
+  document.querySelectorAll("#schedule-view-toggle button").forEach(b => b.classList.toggle("active", b === btn));
+  renderSchedule();
+});
+document.getElementById("tasks-view-toggle").addEventListener("click", (e) => {
+  const btn = e.target.closest("button");
+  if(!btn) return;
+  taskView = btn.dataset.view;
+  document.querySelectorAll("#tasks-view-toggle button").forEach(b => b.classList.toggle("active", b === btn));
+  renderTasks();
+});
+
+refreshAll();
+setInterval(refreshAll, CONFIG.REFRESH_MINUTES * 60 * 1000);
+</script>
+</body>
+</html>
