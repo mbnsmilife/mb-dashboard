@@ -319,7 +319,7 @@
     box-shadow: var(--shadow-card);
     padding: 28px 30px;
     width:100%;
-    max-width:680px;
+    max-width:920px;
     max-height:80vh;
     overflow-y:auto;
   }
@@ -348,44 +348,52 @@
     flex-shrink:0;
   }
   .modal-close:active{ background:var(--amber-dim); color:var(--amber); }
-  .menu-day-block{ padding:16px 0; border-bottom:1px solid var(--line); }
-  .menu-day-block:last-child{ border-bottom:none; }
-  .menu-day-header{
-    font-size:15px;
-    font-weight:600;
-    color:var(--amber);
-    margin-bottom:12px;
+  .menu-cal-wrap{ overflow-x:auto; }
+  .menu-cal-grid{
+    display:grid;
+    gap:1px;
+    background: var(--line);
+    border:1px solid var(--line);
+    border-radius: var(--radius-md);
+    overflow:hidden;
+    font-size:12.5px;
+    min-width:640px;
   }
-  .menu-day-header .menu-date{
+  .menu-cal-cell{
+    background: var(--bg);
+    padding:10px 12px;
+    text-align:left;
+  }
+  .menu-cal-corner{ background: var(--bg); }
+  .menu-cal-daylabel{
+    font-weight:600;
+    color:var(--text-muted);
+    font-size:12px;
+    text-align:center;
+  }
+  .menu-cal-daylabel .menu-cal-daydate{
+    display:block;
     font-family:'JetBrains Mono', monospace;
     font-weight:400;
-    font-size:12px;
+    font-size:10.5px;
     color:var(--text-dim);
-    margin-left:8px;
+    margin-top:2px;
   }
-  .menu-option{
+  .menu-cal-daylabel.today{ color:var(--amber); }
+  .menu-cal-daylabel.today .menu-cal-daydate{ color:var(--amber); }
+  .menu-cal-rowlabel{
+    font-weight:600;
+    color:var(--text-dim);
+    font-size:11px;
     display:flex;
     align-items:flex-start;
-    gap:12px;
-    margin-bottom:10px;
+    white-space:nowrap;
   }
-  .menu-option:last-child{ margin-bottom:0; }
-  .menu-option-label{
-    flex-shrink:0;
-    width:22px; height:22px;
-    border-radius:50%;
-    background: var(--amber-dim);
-    color: var(--amber);
-    font-size:11px;
-    font-weight:700;
-    display:flex; align-items:center; justify-content:center;
-    margin-top:1px;
-  }
-  .menu-option-text{
-    font-size:14px;
-    line-height:1.5;
+  .menu-cal-slot{
     color:var(--text);
+    line-height:1.42;
   }
+  .menu-cal-slot.today-col{ background: var(--amber-dim); }
   .menu-empty{ color:var(--text-muted); text-align:center; padding:22px 0; }
 
   /* ---------- INFO STRIP (ünnepek / tanítási napok) ---------- */
@@ -1052,6 +1060,14 @@ function renderSchoolDaysInfo(){
 /* ---------- ÉTLAP ---------- */
 let menuRows = [];
 
+const MENU_CATEGORY_ROWS = [
+  { key: "tízórai", label: "Tízórai" },
+  { key: "menü a", label: "A" },
+  { key: "menü b", label: "B" },
+  { key: "menü c", label: "C" },
+  { key: "uzsonna", label: "Uzsonna" },
+];
+
 function currentWeekRange(){
   const now = new Date(); now.setHours(0,0,0,0);
   const monday = mondayOfWeek(now);
@@ -1059,28 +1075,9 @@ function currentWeekRange(){
   return { monday, friday };
 }
 
-function menuDayBlockHTML(r){
-  const dateLabel = r._date.toLocaleDateString('hu-HU',{month:'short', day:'numeric'});
-  const options = [
-    ["A", r["menü a"] || r["menu a"] || ""],
-    ["B", r["menü b"] || r["menu b"] || ""],
-    ["C", r["menü c"] || r["menu c"] || ""],
-  ].filter(([,text]) => text);
-
-  if(options.length === 0) return "";
-
-  return `<div class="menu-day-block">
-            <div class="menu-day-header">${HU_DAYS[r._date.getDay()]} <span class="menu-date">${dateLabel}</span></div>
-            ${options.map(([label, text]) => `
-              <div class="menu-option">
-                <span class="menu-option-label">${label}</span>
-                <span class="menu-option-text">${text}</span>
-              </div>`).join("")}
-          </div>`;
-}
-
 function renderMenu(){
   const { monday, friday } = currentWeekRange();
+  const now = new Date(); now.setHours(0,0,0,0);
   const rows = menuRows
     .map(r => ({...r, _date: parseHuDate(r["dátum"] || r["datum"] || "")}))
     .filter(r => r._date && r._date >= monday && r._date <= friday)
@@ -1090,15 +1087,34 @@ function renderMenu(){
   document.getElementById("menu-range").textContent = rangeLabel;
 
   const body = document.getElementById("menu-body");
-  const blocks = rows.map(menuDayBlockHTML).filter(Boolean);
-  body.innerHTML = blocks.length
-    ? blocks.join("")
-    : `<div class="menu-empty">Nincs rögzített étlap erre a hétre.</div>`;
+  if(rows.length === 0){
+    body.innerHTML = `<div class="menu-empty">Nincs rögzített étlap erre a hétre.</div>`;
+    return;
+  }
+
+  let html = `<div class="menu-cal-wrap"><div class="menu-cal-grid" style="grid-template-columns: 74px repeat(${rows.length}, 1fr);">`;
+  html += `<div class="menu-cal-cell menu-cal-corner"></div>`;
+  rows.forEach(r => {
+    const isToday = sameDate(r._date, now);
+    html += `<div class="menu-cal-cell menu-cal-daylabel ${isToday ? "today" : ""}">${HU_DAYS_SHORT[r._date.getDay()]}<span class="menu-cal-daydate">${r._date.toLocaleDateString('hu-HU',{month:'short', day:'numeric'})}</span></div>`;
+  });
+
+  MENU_CATEGORY_ROWS.forEach(cat => {
+    html += `<div class="menu-cal-cell menu-cal-rowlabel">${cat.label}</div>`;
+    rows.forEach(r => {
+      const isToday = sameDate(r._date, now);
+      const text = r[cat.key] || "";
+      html += `<div class="menu-cal-cell menu-cal-slot ${isToday ? "today-col" : ""}">${text}</div>`;
+    });
+  });
+
+  html += `</div></div>`;
+  body.innerHTML = html;
 }
 
 async function loadMenu(){
   try{
-    menuRows = await fetchSheetTab(CONFIG.MENU_TAB, ["dátum", "menü a", "menü b", "menü c"]);
+    menuRows = await fetchSheetTab(CONFIG.MENU_TAB, ["dátum", "tízórai", "menü a", "menü b", "menü c", "uzsonna"]);
     renderMenu();
   }catch(e){
     document.getElementById("menu-body").innerHTML = `<div class="menu-empty">Nem sikerült betölteni az étlapot.</div>`;
