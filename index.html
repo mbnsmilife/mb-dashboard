@@ -288,6 +288,106 @@
   }
   .refresh-btn:active{ background:var(--amber-dim); color:var(--amber); }
 
+  .menu-btn{
+    background:none;
+    border:1px solid var(--line);
+    color:var(--text-muted);
+    font-family:'Libre Franklin', sans-serif;
+    font-size:11px;
+    padding:8px 14px;
+    border-radius: var(--radius-sm);
+    cursor:pointer;
+  }
+  .menu-btn:active{ background:var(--amber-dim); color:var(--amber); }
+
+  /* ---------- ÉTLAP MODAL ---------- */
+  .modal-overlay{
+    position:fixed;
+    inset:0;
+    background: rgba(10,10,16,0.55);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:40px;
+    z-index:100;
+  }
+  .modal-overlay.hidden{ display:none; }
+  .modal-card{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    padding: 28px 30px;
+    width:100%;
+    max-width:680px;
+    max-height:80vh;
+    overflow-y:auto;
+  }
+  .modal-header{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    margin-bottom:22px;
+  }
+  .modal-title{ font-size:20px; font-weight:600; color:var(--text); }
+  .modal-subtitle{
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    color:var(--text-muted);
+    margin-top:5px;
+  }
+  .modal-close{
+    background:none;
+    border:1px solid var(--line);
+    color:var(--text-muted);
+    width:32px; height:32px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .modal-close:active{ background:var(--amber-dim); color:var(--amber); }
+  .menu-day-block{ padding:16px 0; border-bottom:1px solid var(--line); }
+  .menu-day-block:last-child{ border-bottom:none; }
+  .menu-day-header{
+    font-size:15px;
+    font-weight:600;
+    color:var(--amber);
+    margin-bottom:12px;
+  }
+  .menu-day-header .menu-date{
+    font-family:'JetBrains Mono', monospace;
+    font-weight:400;
+    font-size:12px;
+    color:var(--text-dim);
+    margin-left:8px;
+  }
+  .menu-option{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    margin-bottom:10px;
+  }
+  .menu-option:last-child{ margin-bottom:0; }
+  .menu-option-label{
+    flex-shrink:0;
+    width:22px; height:22px;
+    border-radius:50%;
+    background: var(--amber-dim);
+    color: var(--amber);
+    font-size:11px;
+    font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+    margin-top:1px;
+  }
+  .menu-option-text{
+    font-size:14px;
+    line-height:1.5;
+    color:var(--text);
+  }
+  .menu-empty{ color:var(--text-muted); text-align:center; padding:22px 0; }
+
   /* ---------- INFO STRIP (ünnepek / tanítási napok) ---------- */
   #info-strip{
     display:flex;
@@ -407,6 +507,7 @@
     </div>
 
     <div class="header-right">
+      <button class="menu-btn" id="menu-open-btn">Ebédmenü</button>
       <button class="refresh-btn" id="refresh-btn">Frissítés</button>
       <button id="theme-toggle" aria-label="Világos/sötét mód váltása"></button>
     </div>
@@ -450,6 +551,19 @@
 
 </div>
 
+<div id="menu-modal" class="modal-overlay hidden">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Heti étlap</div>
+        <div class="modal-subtitle" id="menu-range"></div>
+      </div>
+      <button id="menu-close" class="modal-close" aria-label="Bezárás">✕</button>
+    </div>
+    <div id="menu-body"></div>
+  </div>
+</div>
+
 <script>
 /* =====================================================================
    BEÁLLÍTÁSOK — töltsd ki ezt a részt a saját adataiddal
@@ -462,6 +576,7 @@ const CONFIG = {
   // A két fül (tab) pontos neve a Sheet alján
   SCHEDULE_TAB: "Órarend",
   TASKS_TAB: "Teendők",
+  MENU_TAB: "Ebéd",
 
   // Helyszín a időjáráshoz (alapértelmezett: Budapest)
   LAT: 47.53333,
@@ -934,10 +1049,79 @@ function renderSchoolDaysInfo(){
   el.innerHTML = `<span class="highlight">${count}</span> hátralévő tanítási nap`;
 }
 
+/* ---------- ÉTLAP ---------- */
+let menuRows = [];
+
+function currentWeekRange(){
+  const now = new Date(); now.setHours(0,0,0,0);
+  const monday = mondayOfWeek(now);
+  const friday = addDays(monday, 4);
+  return { monday, friday };
+}
+
+function menuDayBlockHTML(r){
+  const dateLabel = r._date.toLocaleDateString('hu-HU',{month:'short', day:'numeric'});
+  const options = [
+    ["A", r["menü a"] || r["menu a"] || ""],
+    ["B", r["menü b"] || r["menu b"] || ""],
+    ["C", r["menü c"] || r["menu c"] || ""],
+  ].filter(([,text]) => text);
+
+  if(options.length === 0) return "";
+
+  return `<div class="menu-day-block">
+            <div class="menu-day-header">${HU_DAYS[r._date.getDay()]} <span class="menu-date">${dateLabel}</span></div>
+            ${options.map(([label, text]) => `
+              <div class="menu-option">
+                <span class="menu-option-label">${label}</span>
+                <span class="menu-option-text">${text}</span>
+              </div>`).join("")}
+          </div>`;
+}
+
+function renderMenu(){
+  const { monday, friday } = currentWeekRange();
+  const rows = menuRows
+    .map(r => ({...r, _date: parseHuDate(r["dátum"] || r["datum"] || "")}))
+    .filter(r => r._date && r._date >= monday && r._date <= friday)
+    .sort((a,b) => a._date - b._date);
+
+  const rangeLabel = monday.toLocaleDateString('hu-HU',{month:'short', day:'numeric'}) + " – " + friday.toLocaleDateString('hu-HU',{month:'short', day:'numeric'});
+  document.getElementById("menu-range").textContent = rangeLabel;
+
+  const body = document.getElementById("menu-body");
+  const blocks = rows.map(menuDayBlockHTML).filter(Boolean);
+  body.innerHTML = blocks.length
+    ? blocks.join("")
+    : `<div class="menu-empty">Nincs rögzített étlap erre a hétre.</div>`;
+}
+
+async function loadMenu(){
+  try{
+    menuRows = await fetchSheetTab(CONFIG.MENU_TAB, ["dátum", "menü a", "menü b", "menü c"]);
+    renderMenu();
+  }catch(e){
+    document.getElementById("menu-body").innerHTML = `<div class="menu-empty">Nem sikerült betölteni az étlapot.</div>`;
+    console.error(e);
+  }
+}
+
+document.getElementById("menu-open-btn").addEventListener("click", () => {
+  renderMenu();
+  document.getElementById("menu-modal").classList.remove("hidden");
+});
+document.getElementById("menu-close").addEventListener("click", () => {
+  document.getElementById("menu-modal").classList.add("hidden");
+});
+document.getElementById("menu-modal").addEventListener("click", (e) => {
+  if(e.target.id === "menu-modal") document.getElementById("menu-modal").classList.add("hidden");
+});
+
 function refreshAll(){
   loadWeather();
   loadSchedule();
   loadTasks();
+  loadMenu();
   renderHolidayInfo();
   renderSchoolDaysInfo();
 }
