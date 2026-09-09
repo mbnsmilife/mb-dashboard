@@ -1392,8 +1392,10 @@ function showApp(){
 
 document.getElementById("auth-signin-btn").addEventListener("click", () => {
   const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithRedirect(provider).catch(err => {
-    document.getElementById("auth-error").textContent = "Nem sikerült elindítani a bejelentkezést.";
+  document.getElementById("auth-error").textContent = "";
+  auth.signInWithPopup(provider).catch(err => {
+    if(err.code === "auth/popup-closed-by-user") return;
+    document.getElementById("auth-error").textContent = "Nem sikerült bejelentkezni. Próbáld újra.";
     console.error(err);
   });
 });
@@ -1401,11 +1403,6 @@ document.getElementById("auth-signin-btn").addEventListener("click", () => {
 document.getElementById("signout-btn").addEventListener("click", () => {
   if(tasksUnsubscribe) tasksUnsubscribe();
   auth.signOut();
-});
-
-auth.getRedirectResult().catch(err => {
-  console.error(err);
-  showGate("Sikertelen bejelentkezés. Próbáld újra.");
 });
 
 auth.onAuthStateChanged((user) => {
