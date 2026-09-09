@@ -304,51 +304,47 @@
   .modal-overlay{
     position:fixed;
     inset:0;
-    background: rgba(10,10,16,0.55);
+    background: var(--bg);
     display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:40px;
     z-index:100;
   }
   .modal-overlay.hidden{ display:none; }
   .modal-card{
     background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-card);
-    padding: 28px 30px;
     width:100%;
-    max-width:920px;
-    max-height:80vh;
+    height:100%;
+    padding: 30px 40px;
     overflow-y:auto;
+    display:flex;
+    flex-direction:column;
   }
   .modal-header{
     display:flex;
     align-items:flex-start;
     justify-content:space-between;
-    margin-bottom:22px;
+    margin-bottom:26px;
+    flex-shrink:0;
   }
-  .modal-title{ font-size:20px; font-weight:600; color:var(--text); }
+  .modal-title{ font-size:24px; font-weight:600; color:var(--text); }
   .modal-subtitle{
     font-family:'JetBrains Mono', monospace;
-    font-size:13px;
+    font-size:14px;
     color:var(--text-muted);
-    margin-top:5px;
+    margin-top:6px;
   }
   .modal-close{
     background:none;
     border:1px solid var(--line);
     color:var(--text-muted);
-    width:32px; height:32px;
+    width:42px; height:42px;
     border-radius:50%;
     display:flex; align-items:center; justify-content:center;
-    font-size:13px;
+    font-size:16px;
     cursor:pointer;
     flex-shrink:0;
   }
   .modal-close:active{ background:var(--amber-dim); color:var(--amber); }
-  .menu-cal-wrap{ overflow-x:auto; }
+  .menu-cal-wrap{ overflow-x:auto; flex:1; }
   .menu-cal-grid{
     display:grid;
     gap:1px;
@@ -384,16 +380,45 @@
   .menu-cal-rowlabel{
     font-weight:600;
     color:var(--text-dim);
-    font-size:11px;
+    font-size:11.5px;
     display:flex;
-    align-items:flex-start;
+    align-items:center;
+    gap:6px;
     white-space:nowrap;
+  }
+  .menu-row-icon{
+    color: var(--text-dim);
+    display:inline-flex;
+    flex-shrink:0;
+  }
+  .menu-cal-badge{
+    width:20px; height:20px;
+    border-radius:50%;
+    background: var(--amber-dim);
+    color: var(--amber);
+    font-size:10.5px;
+    font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
   }
   .menu-cal-slot{
     color:var(--text);
     line-height:1.42;
   }
   .menu-cal-slot.today-col{ background: var(--amber-dim); }
+  .menu-line{
+    display:flex;
+    align-items:flex-start;
+    gap:7px;
+    margin-bottom:7px;
+  }
+  .menu-line:last-child{ margin-bottom:0; }
+  .menu-line-icon{
+    color: var(--text-dim);
+    flex-shrink:0;
+    margin-top:2px;
+  }
+  .menu-cal-dash{ color: var(--text-dim); }
   .menu-empty{ color:var(--text-muted); text-align:center; padding:22px 0; }
 
   /* ---------- INFO STRIP (ünnepek / tanítási napok) ---------- */
@@ -491,10 +516,120 @@
     color:#D97757;
     padding:8px 0 0 0;
   }
+
+  /* ---------- AUTH GATE ---------- */
+  #auth-gate{
+    position:fixed;
+    inset:0;
+    background: var(--bg);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:200;
+  }
+  .auth-card{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    padding: 44px 48px;
+    max-width:400px;
+    text-align:center;
+  }
+  .auth-title{
+    font-size:22px;
+    font-weight:600;
+    color: var(--text);
+    margin-bottom:8px;
+  }
+  .auth-subtitle{
+    font-size:14px;
+    color: var(--text-muted);
+    margin-bottom:26px;
+    line-height:1.5;
+  }
+  .auth-signin-btn{
+    background: var(--amber);
+    color: var(--panel);
+    border:none;
+    font-family:'Libre Franklin', sans-serif;
+    font-size:15px;
+    font-weight:600;
+    padding:14px 24px;
+    border-radius: var(--radius-md);
+    cursor:pointer;
+    width:100%;
+  }
+  .auth-signin-btn:active{ opacity:0.85; }
+  .auth-error{
+    color:#D97757;
+    font-size:12.5px;
+    margin-top:16px;
+    min-height:1em;
+  }
+
+  /* ---------- ÚJ FELADAT ŰRLAP ---------- */
+  #new-task-form{
+    display:flex;
+    gap:8px;
+    margin-top:16px;
+    padding-top:16px;
+    border-top:1px solid var(--line);
+    flex-shrink:0;
+  }
+  #new-task-text{
+    flex:1;
+    min-width:0;
+    background: var(--bg);
+    border:1px solid var(--line);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family:'Libre Franklin', sans-serif;
+    font-size:13.5px;
+    padding:9px 12px;
+  }
+  #new-task-date{
+    background: var(--bg);
+    border:1px solid var(--line);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-family:'Libre Franklin', sans-serif;
+    font-size:13px;
+    padding:9px 8px;
+    width:128px;
+    flex-shrink:0;
+  }
+  #new-task-add{
+    background: var(--amber);
+    color: var(--panel);
+    border:none;
+    border-radius: var(--radius-sm);
+    width:38px;
+    flex-shrink:0;
+    font-size:18px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  #new-task-add:active{ opacity:0.85; }
+  .task-row{ cursor:pointer; }
+  .task-row .task-checkbox{ transition: opacity .15s ease; }
+  .task-row:active .task-checkbox{ opacity:0.6; }
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
-<div id="app">
+<div id="auth-gate">
+  <div class="auth-card">
+    <div class="auth-title">Otthoni tábla</div>
+    <div class="auth-subtitle">Jelentkezz be Google-fiókkal a folytatáshoz.</div>
+    <button id="auth-signin-btn" class="auth-signin-btn">Bejelentkezés Google-fiókkal</button>
+    <div class="auth-error" id="auth-error"></div>
+  </div>
+</div>
+
+<div id="app" style="display:none;">
 
   <header>
     <div class="header-left">
@@ -517,6 +652,7 @@
     <div class="header-right">
       <button class="menu-btn" id="menu-open-btn">Ebédmenü</button>
       <button class="refresh-btn" id="refresh-btn">Frissítés</button>
+      <button class="refresh-btn" id="signout-btn">Kijelentkezés</button>
       <button id="theme-toggle" aria-label="Világos/sötét mód váltása"></button>
     </div>
   </header>
@@ -538,7 +674,11 @@
         </div>
       </div>
       <div id="task-list"><div class="empty-state">Betöltés…</div></div>
-      <div class="updated" id="tasks-updated"></div>
+      <form id="new-task-form">
+        <input type="text" id="new-task-text" placeholder="Új feladat…" autocomplete="off">
+        <input type="date" id="new-task-date">
+        <button type="submit" id="new-task-add">+</button>
+      </form>
       <div class="error-banner" id="tasks-error"></div>
     </section>
 
@@ -581,9 +721,9 @@ const CONFIG = {
   // https://docs.google.com/spreadsheets/d/13ZkHEgfFELbyIypIaU8kjbun8ORPtylC5cOzm__4JIg/edit
   SHEET_ID: "13ZkHEgfFELbyIypIaU8kjbun8ORPtylC5cOzm__4JIg",
 
-  // A két fül (tab) pontos neve a Sheet alján
+  // A két fül (tab) pontos neve a Sheet alján — a Teendők fül már nem kell,
+  // a feladatok mostantól Firestore-ból jönnek (lásd FIREBASE lent)
   SCHEDULE_TAB: "Órarend",
-  TASKS_TAB: "Teendők",
   MENU_TAB: "Ebéd",
 
   // Helyszín a időjáráshoz (alapértelmezett: Budapest)
@@ -602,8 +742,20 @@ const CONFIG = {
     // { start: "2027-03-27", end: "2027-03-30" }
   ],
 
-  // Automatikus frissítés gyakorisága percben
-  REFRESH_MINUTES: 15
+  // Automatikus frissítés gyakorisága percben (időjárás, órarend, étlap —
+  // a teendők ezt nem használják, azok valós időben frissülnek)
+  REFRESH_MINUTES: 15,
+
+  // Firebase — töltsd ki a Firebase konzol → Project settings → Your apps
+  // → Web app alatt található "firebaseConfig" objektum értékeivel.
+  FIREBASE: {
+    apiKey: "AIzaSyCJF8vR5d0YtIWxASYYDC5coZuDqPiFbTY",
+    authDomain: "home-board-ee1cc.firebaseapp.com",
+    projectId: "home-board-ee1cc",
+    storageBucket: "home-board-ee1cc.firebasestorage.app",
+    messagingSenderId: "639872675622",
+    appId: "1:639872675622:web:e4430e8cc971ef78681be7"
+  }
 };
 /* ===================================================================== */
 
@@ -909,18 +1061,12 @@ async function loadSchedule(){
 
 let taskRows = [];
 let taskView = "day"; // "day" | "week"
+let tasksUnsubscribe = null;
 
-function notDone(r){
-  const v = (r["kész"]||r["kesz"]||"").toLowerCase();
-  return v !== "true" && v !== "igen";
-}
-function openTasksList(){
-  return taskRows.filter(notDone).map(r => ({...r, _date: parseHuDate(r["dátum"]||r["datum"]||"")}));
-}
 function taskRowHTML(r){
   const label = r._date ? r._date.toLocaleDateString('hu-HU',{month:'short', day:'numeric'}) : "";
-  return `<div class="task-row">
-            <svg viewBox="0 0 18 18"><rect x="1" y="1" width="16" height="16" rx="3" stroke="var(--text-muted)" stroke-width="1.5" fill="none"/></svg>
+  return `<div class="task-row" data-id="${r._id}">
+            <svg class="task-checkbox" viewBox="0 0 18 18"><rect x="1" y="1" width="16" height="16" rx="3" stroke="var(--text-muted)" stroke-width="1.5" fill="none"/></svg>
             <div>
               <span class="task-text">${r["feladat"]||""}</span>
               ${label ? `<span class="task-due">${label}</span>` : ""}
@@ -931,7 +1077,7 @@ function taskRowHTML(r){
 function renderTasks(){
   const listEl = document.getElementById("task-list");
   const today = new Date(); today.setHours(0,0,0,0);
-  const items = openTasksList();
+  const items = taskRows.map(r => ({...r, _date: parseHuDate(r["dátum"] || r["datum"] || "")}));
 
   if(taskView === "day"){
     const dayItems = items.filter(r => !r._date || sameDate(r._date, today));
@@ -962,18 +1108,55 @@ function renderTasks(){
   }
 }
 
-async function loadTasks(){
-  const errEl = document.getElementById("tasks-error");
-  errEl.textContent = "";
-  try{
-    taskRows = await fetchSheetTab(CONFIG.TASKS_TAB, ["feladat", "dátum", "kész"]);
-    renderTasks();
-    document.getElementById("tasks-updated").textContent = "Frissítve: " + new Date().toLocaleTimeString('hu-HU',{hour:'2-digit',minute:'2-digit'});
-  }catch(e){
-    errEl.textContent = "Nem sikerült betölteni a teendőket. Ellenőrizd a Sheet ID-t és a megosztást.";
-    console.error(e);
-  }
+function tasksCollectionRef(uid){
+  return db.collection("tasks").doc(uid).collection("items");
 }
+
+function startTasksListener(uid){
+  const errEl = document.getElementById("tasks-error");
+  if(tasksUnsubscribe) tasksUnsubscribe();
+  tasksUnsubscribe = tasksCollectionRef(uid)
+    .where("kész", "==", false)
+    .onSnapshot(
+      (snapshot) => {
+        errEl.textContent = "";
+        taskRows = snapshot.docs.map(doc => ({ _id: doc.id, ...doc.data() }));
+        renderTasks();
+      },
+      (err) => {
+        errEl.textContent = "Nem sikerült betölteni a teendőket.";
+        console.error(err);
+      }
+    );
+}
+
+document.getElementById("new-task-form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const uid = currentUser && currentUser.uid;
+  if(!uid) return;
+  const textEl = document.getElementById("new-task-text");
+  const dateEl = document.getElementById("new-task-date");
+  const text = textEl.value.trim();
+  if(!text) return;
+  const dateVal = dateEl.value ? dateEl.value.replaceAll("-", ".") + "." : "";
+  tasksCollectionRef(uid).add({
+    feladat: text,
+    "dátum": dateVal,
+    "kész": false,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    textEl.value = "";
+    dateEl.value = "";
+  }).catch(err => console.error(err));
+});
+
+document.getElementById("task-list").addEventListener("click", (e) => {
+  const row = e.target.closest(".task-row");
+  const uid = currentUser && currentUser.uid;
+  if(!row || !uid) return;
+  const id = row.dataset.id;
+  tasksCollectionRef(uid).doc(id).update({ "kész": true }).catch(err => console.error(err));
+});
 
 /* ---------- MAGYAR ÜNNEPNAPOK ---------- */
 function easterSunday(year){
@@ -1060,13 +1243,19 @@ function renderSchoolDaysInfo(){
 /* ---------- ÉTLAP ---------- */
 let menuRows = [];
 
-const MENU_CATEGORY_ROWS = [
-  { key: "tízórai", label: "Tízórai" },
-  { key: "menü a", label: "A" },
-  { key: "menü b", label: "B" },
-  { key: "menü c", label: "C" },
-  { key: "uzsonna", label: "Uzsonna" },
-];
+const MENU_ICONS = {
+  breakfast: `<svg viewBox="0 0 16 16" width="15" height="15"><path d="M3 8h9v3a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8Z" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M12 9h1.3a1.8 1.8 0 0 1 0 3.6H12" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M6 3c0 .8-.9.9-.9 1.7M9.5 3c0 .8-.9.9-.9 1.7" stroke="currentColor" stroke-width="1.1" fill="none" stroke-linecap="round"/></svg>`,
+  soup: `<svg viewBox="0 0 16 16" width="14" height="14"><path d="M2 8h12a5.5 5.5 0 0 1-5.5 5.5h-1A5.5 5.5 0 0 1 2 8Z" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linejoin="round"/><path d="M5.5 5.5c0-1 .9-1 .9-2M9.5 5.5c0-1 .9-1 .9-2" stroke="currentColor" stroke-width="1.1" fill="none" stroke-linecap="round"/></svg>`,
+  main: `<svg viewBox="0 0 16 16" width="14" height="14"><path d="M4 1.5v5.2a1.3 1.3 0 0 0 2.6 0V1.5M5.3 1.5V14.5" stroke="currentColor" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M11.3 1.5c-1.3 0-1.8 1.8-1.8 3.5s.5 2.7 1.8 2.7v7" stroke="currentColor" stroke-width="1.1" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  snack: `<svg viewBox="0 0 16 16" width="15" height="15"><path d="M8 5.2c-1.8-2-4.6-.8-4.6 1.8 0 2.8 1.8 5.6 4.6 6.5 2.8-.9 4.6-3.7 4.6-6.5 0-2.6-2.8-3.8-4.6-1.8Z" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linejoin="round"/><path d="M8 5.2V3M8 3c0-.9.9-1.4 1.8-.9" stroke="currentColor" stroke-width="1.1" fill="none" stroke-linecap="round"/></svg>`
+};
+
+function splitSoupMain(text){
+  if(!text) return null;
+  const parts = text.split(",").map(s => s.trim()).filter(Boolean);
+  if(parts.length === 0) return null;
+  return { soup: parts[0], main: parts.slice(1).join(", ") };
+}
 
 function currentWeekRange(){
   const now = new Date(); now.setHours(0,0,0,0);
@@ -1092,20 +1281,45 @@ function renderMenu(){
     return;
   }
 
-  let html = `<div class="menu-cal-wrap"><div class="menu-cal-grid" style="grid-template-columns: 74px repeat(${rows.length}, 1fr);">`;
+  const dash = `<span class="menu-cal-dash">—</span>`;
+  let html = `<div class="menu-cal-wrap"><div class="menu-cal-grid" style="grid-template-columns: 84px repeat(${rows.length}, 1fr);">`;
   html += `<div class="menu-cal-cell menu-cal-corner"></div>`;
   rows.forEach(r => {
     const isToday = sameDate(r._date, now);
     html += `<div class="menu-cal-cell menu-cal-daylabel ${isToday ? "today" : ""}">${HU_DAYS_SHORT[r._date.getDay()]}<span class="menu-cal-daydate">${r._date.toLocaleDateString('hu-HU',{month:'short', day:'numeric'})}</span></div>`;
   });
 
-  MENU_CATEGORY_ROWS.forEach(cat => {
-    html += `<div class="menu-cal-cell menu-cal-rowlabel">${cat.label}</div>`;
+  // Tízórai
+  html += `<div class="menu-cal-cell menu-cal-rowlabel"><span class="menu-row-icon">${MENU_ICONS.breakfast}</span>Tízórai</div>`;
+  rows.forEach(r => {
+    const isToday = sameDate(r._date, now);
+    const text = r["tízórai"] || r["tizorai"] || "";
+    html += `<div class="menu-cal-cell menu-cal-slot ${isToday ? "today-col" : ""}">${text || dash}</div>`;
+  });
+
+  // Ebéd A / B / C — soup + main course, each with its own icon
+  [["menü a","A"], ["menü b","B"], ["menü c","C"]].forEach(([key, label]) => {
+    html += `<div class="menu-cal-cell menu-cal-rowlabel"><span class="menu-cal-badge">${label}</span></div>`;
     rows.forEach(r => {
       const isToday = sameDate(r._date, now);
-      const text = r[cat.key] || "";
-      html += `<div class="menu-cal-cell menu-cal-slot ${isToday ? "today-col" : ""}">${text}</div>`;
+      const split = splitSoupMain(r[key] || "");
+      let content = dash;
+      if(split){
+        content = `<div class="menu-line"><span class="menu-line-icon">${MENU_ICONS.soup}</span><span>${split.soup}</span></div>`;
+        if(split.main){
+          content += `<div class="menu-line"><span class="menu-line-icon">${MENU_ICONS.main}</span><span>${split.main}</span></div>`;
+        }
+      }
+      html += `<div class="menu-cal-cell menu-cal-slot ${isToday ? "today-col" : ""}">${content}</div>`;
     });
+  });
+
+  // Uzsonna
+  html += `<div class="menu-cal-cell menu-cal-rowlabel"><span class="menu-row-icon">${MENU_ICONS.snack}</span>Uzsonna</div>`;
+  rows.forEach(r => {
+    const isToday = sameDate(r._date, now);
+    const text = r["uzsonna"] || "";
+    html += `<div class="menu-cal-cell menu-cal-slot ${isToday ? "today-col" : ""}">${text || dash}</div>`;
   });
 
   html += `</div></div>`;
@@ -1136,7 +1350,6 @@ document.getElementById("menu-modal").addEventListener("click", (e) => {
 function refreshAll(){
   loadWeather();
   loadSchedule();
-  loadTasks();
   loadMenu();
   renderHolidayInfo();
   renderSchoolDaysInfo();
@@ -1159,8 +1372,56 @@ document.getElementById("tasks-view-toggle").addEventListener("click", (e) => {
   renderTasks();
 });
 
-refreshAll();
-setInterval(refreshAll, CONFIG.REFRESH_MINUTES * 60 * 1000);
+/* ---------- FIREBASE: BEJELENTKEZÉS ÉS INDÍTÁS ---------- */
+firebase.initializeApp(CONFIG.FIREBASE);
+const auth = firebase.auth();
+const db = firebase.firestore();
+let currentUser = null;
+let appStarted = false;
+
+function showGate(errorMsg){
+  document.getElementById("auth-gate").style.display = "flex";
+  document.getElementById("app").style.display = "none";
+  document.getElementById("auth-error").textContent = errorMsg || "";
+}
+
+function showApp(){
+  document.getElementById("auth-gate").style.display = "none";
+  document.getElementById("app").style.display = "flex";
+}
+
+document.getElementById("auth-signin-btn").addEventListener("click", () => {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithRedirect(provider).catch(err => {
+    document.getElementById("auth-error").textContent = "Nem sikerült elindítani a bejelentkezést.";
+    console.error(err);
+  });
+});
+
+document.getElementById("signout-btn").addEventListener("click", () => {
+  if(tasksUnsubscribe) tasksUnsubscribe();
+  auth.signOut();
+});
+
+auth.getRedirectResult().catch(err => {
+  console.error(err);
+  showGate("Sikertelen bejelentkezés. Próbáld újra.");
+});
+
+auth.onAuthStateChanged((user) => {
+  currentUser = user;
+  if(user){
+    showApp();
+    startTasksListener(user.uid);
+    if(!appStarted){
+      appStarted = true;
+      refreshAll();
+      setInterval(refreshAll, CONFIG.REFRESH_MINUTES * 60 * 1000);
+    }
+  } else {
+    showGate();
+  }
+});
 </script>
 </body>
 </html>
